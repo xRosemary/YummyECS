@@ -1,0 +1,8 @@
+{
+  "name": "yummyecs",
+  "version": "1.0.0",
+  "description": "一个基于Puerts的虚幻引擎ECS框架",
+  "main": "index.js",
+  "author": "xRosemary",
+  "license": "MPL-2.0"
+}
