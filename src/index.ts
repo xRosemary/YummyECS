@@ -1,2 +1,2 @@
-export * from './Framework';
-export * from './Decorator';
+export * as F from './Framework';
+export * as D from './Decorator';

@@ -1,9 +1,9 @@
-import * as F from '../Framework';
-import * as D from '../Decorator';
+import { D, F } from '..';
+
 class MySystem extends F.System {
     @D.listen(F.EntityAction)
     public call(action: F.Action) {
-        console.log(`function called, receive from action: ${action.constructor.name}`);
+        console.log(`${this.constructor.name} function called, receive from action: ${action.constructor.name}`);
     }
 }
 
