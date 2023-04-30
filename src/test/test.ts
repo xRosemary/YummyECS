@@ -7,5 +7,6 @@ class MySystem extends F.System {
     }
 }
 
-let system = new MySystem();
+console.log(MySystem.getInstance() === F.System.getInstance);
+console.log(MySystem.getInstance() === MySystem.getInstance());
 F.EntityAction.do();
