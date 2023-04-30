@@ -1,4 +1,4 @@
-import { Dispatcher } from '../Framework';
+import { F } from '..';
 
 type ctor = { new (...args: any[]): {} };
 export function register<T>(tag: string) {
@@ -15,6 +15,11 @@ export function register<T>(tag: string) {
  */
 export function listen<T extends ctor>(ctor: T) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        Dispatcher.getInstance().registerActionListener(target.constructor, propertyKey, ctor);
+        F.assert(
+            target.constructor.prototype instanceof F.System,
+            `${target} fail to listen to Action or Event. Make sure the function exists in the System`
+        );
+
+        F.Dispatcher.getInstance().registerActionListener(target.constructor, propertyKey, ctor);
     };
 }
