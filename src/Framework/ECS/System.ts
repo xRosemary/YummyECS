@@ -1,11 +1,14 @@
-import { Singleton } from '../Common';
-import { World } from '../World';
-/**
- * @todo 完善System的结构
- */
-export class System extends Singleton {
-    constructor() {
-        super();
-        World.getInstance().registerSystem(this);
+import { assert } from '../Util';
+import { Component } from './Component';
+import { RelationMapping } from '../Common/RelationMapping';
+
+export class System {
+    protected modify<T extends Component>(component: T, func: (v: T) => void) {
+        assert(
+            RelationMapping.getInstance().checkComponent(this.constructor, component.constructor),
+            `${this.constructor.name} does not have permission to modify ${component.constructor.name}`
+        );
+
+        func(component);
     }
 }
