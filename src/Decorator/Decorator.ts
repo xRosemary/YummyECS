@@ -1,5 +1,5 @@
-import { F } from '../';
-import { RelationMapping } from '../Framework/Common/RelationMapping';
+import { RelationMapping, assert } from '../Common';
+import { System } from '../Framework/ECS';
 
 type ctor = { new (...args: any[]): {} };
 /**
@@ -23,8 +23,8 @@ export function register<T>(componentCtor: ctor | ctor[]) {
  */
 export function listen<T extends ctor>(ctor: T) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        F.assert(
-            target.constructor.prototype instanceof F.System,
+        assert(
+            target.constructor.prototype instanceof System,
             `${target} fail to listen to Action or Event. Make sure the function exists in the System`
         );
 
