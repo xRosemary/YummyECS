@@ -1,20 +1,27 @@
-import { Singleton } from './Common';
-import { System } from './ECS';
+import * as UE from 'ue';
 
+import './ObjExtension';
+import { PoolSystem } from './Pool';
+import { Singleton } from '../Common';
 export class World extends Singleton {
-    private systems: System[];
+    private _gameInstance!: UE.GameInstance;
+    private _pool!: PoolSystem;
 
-    constructor() {
-        super();
-        this.systems = [];
+    public getWorld(): UE.World {
+        return this._gameInstance.GetWorld();
     }
 
-    public getAllSystems(): System[] {
-        return this.systems;
+    public get gameInstance(): UE.GameInstance {
+        return this._gameInstance;
     }
 
-    public registerSystem<T extends System>(system: T) {
-        this.systems.push(system);
-        return system;
+    public init(instance: UE.GameInstance) {
+        console.log('The world is being initialized');
+        this._pool = new PoolSystem();
+        this._gameInstance = instance;
+        if (!this._pool || !this._gameInstance) {
+            console.error('World initialization failed');
+        }
+        console.log('World initialization successful');
     }
 }

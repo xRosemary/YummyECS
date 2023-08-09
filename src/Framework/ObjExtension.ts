@@ -1,5 +1,7 @@
 import * as UE from 'ue';
 
+console.log(`Unreal obj extension loaded`);
+
 declare module 'ue' {
     interface Actor {
         CreateDefaultSubobjectGeneric<T extends UE.Object>(SubobjectFName: string, ReturnType: UE.Class): T;
