@@ -48,7 +48,10 @@ export class RelationMapping extends Singleton {
         }
     }
 
-    public checkComponent(systemCtor: Function, componentCtor: Function): boolean {
+    /**
+     * 检测某个system是否可以控制某类component
+     */
+    public auth(systemCtor: Function, componentCtor: Function): boolean {
         let compList = this.componentMap.get(systemCtor);
         if (compList === undefined) {
             return false;

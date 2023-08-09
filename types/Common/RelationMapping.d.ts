@@ -23,5 +23,8 @@ export declare class RelationMapping extends Singleton {
     registerListener(ctor: Function, functionName: string, ae: Function): void;
     getListenerList(ctor: Function): Listener[];
     registerComponent(systemCtor: Function, componentCtor: Function): void;
-    checkComponent(systemCtor: Function, componentCtor: Function): boolean;
+    /**
+     * 检测某个system是否可以控制某类component
+     */
+    auth(systemCtor: Function, componentCtor: Function): boolean;
 }
