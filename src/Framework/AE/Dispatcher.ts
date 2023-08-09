@@ -1,6 +1,6 @@
-import { Singleton } from '../Common';
-import { Listener, RelationMapping } from '../Common/RelationMapping';
-import { World } from '../World';
+import { Listener, RelationMapping, Singleton } from '../../Common/';
+import { SystemPoolStore } from '../Pool/SystemPoolStore';
+
 import { Action } from './Action';
 import { Event } from './Event';
 
@@ -14,17 +14,18 @@ export class Dispatcher extends Singleton {
 
         if (ae instanceof Action) {
             // Action 为一对一通信，因此只取第一个监听者
-            this.dispatchAction(ae, listenerList[0]);
+            return this.dispatchAction(ae, listenerList[0]);
         } else {
-            this.dispatchEvent(ae, listenerList);
+            // Event 为一对多通信
+            return this.dispatchEvent(ae, listenerList);
         }
     }
 
     private dispatchEvent(event: Event, listenerList: Listener[]) {
         listenerList.forEach((v) => {
-            const system = World.getInstance().pool.systems.find((s) => s.constructor === v.ctor);
+            const system = SystemPoolStore.getInstance().systems.find((s) => s.constructor === v.ctor);
             if (system !== undefined) {
-                this.execMethod(system, v.functionName, event);
+                return this.execMethod(system, v.functionName, event);
             }
         });
     }
@@ -34,14 +35,14 @@ export class Dispatcher extends Singleton {
      * @param action
      */
     private dispatchAction(action: Action, listener: Listener) {
-        const system = World.getInstance().pool.systems.find((s) => s.constructor === listener.ctor);
+        const system = SystemPoolStore.getInstance().systems.find((s) => s.constructor === listener.ctor);
         if (system !== undefined) {
-            this.execMethod(system, listener.functionName, action);
+            return this.execMethod(system, listener.functionName, action);
         }
     }
 
     private execMethod(system: any, functionName: string, ae: Action | Event) {
         console.log(`Dispatch [${ae.constructor.name}] to ${system.constructor.name}: ${functionName}()`);
-        system[functionName].call(system, ae);
+        return system[functionName].call(system, ae);
     }
 }
