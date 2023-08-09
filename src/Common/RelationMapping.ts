@@ -1,4 +1,4 @@
-import { Singleton } from '.';
+import { Singleton } from './Singleton';
 
 export interface Listener {
     ctor: Function;
