@@ -1,4 +1,4 @@
-import { RelationMapping, assert } from '../Common';
+import { ActionMapping, RelationMapping, assert } from '../Common';
 import { System } from '../Framework/ECS';
 
 type ctor = { new (...args: any[]): {} };
@@ -28,6 +28,6 @@ export function listen<T extends ctor>(ctor: T) {
             `${target} fail to listen to Action or Event. Make sure the function exists in the System`
         );
 
-        RelationMapping.getInstance().registerListener(target.constructor, propertyKey, ctor);
+        ActionMapping.getInstance().registerListener(target.constructor, propertyKey, ctor);
     };
 }
