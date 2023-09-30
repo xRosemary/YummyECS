@@ -6,11 +6,9 @@ export interface Listener {
 }
 
 /**
- * 用于记录System与Component的控制关系
+ * 事件映射
  */
-export class RelationMapping extends Singleton {
-    componentMap = new Map<Function, Function[]>();
-
+export class ActionMapping extends Singleton {
     /**
      * action注册表
      * @key 事件的构造器
@@ -35,9 +33,26 @@ export class RelationMapping extends Singleton {
         listenerList.push({ ctor: ctor, functionName: functionName });
     }
 
+    public unregisterListener(ctor: Function, ae: Function) {
+        let listenerList = this.actionMap.get(ae);
+        if (listenerList === undefined) {
+            return;
+        }
+
+        const index: number = listenerList.findIndex((v) => v.ctor === ctor);
+        ~index && listenerList.splice(index, 1);
+    }
+
     public getListenerList(ctor: Function): Listener[] {
         return this.actionMap.get(ctor) ?? [];
     }
+}
+
+/**
+ * 用于记录System与Component的控制关系
+ */
+export class RelationMapping extends Singleton {
+    componentMap = new Map<Function, Function[]>();
 
     public registerComponent(systemCtor: Function, componentCtor: Function) {
         let compList = this.componentMap.get(systemCtor);
@@ -48,7 +63,10 @@ export class RelationMapping extends Singleton {
         }
     }
 
-    public checkComponent(systemCtor: Function, componentCtor: Function): boolean {
+    /**
+     * 检测某个system是否可以控制某类component
+     */
+    public auth(systemCtor: Function, componentCtor: Function): boolean {
         let compList = this.componentMap.get(systemCtor);
         if (compList === undefined) {
             return false;

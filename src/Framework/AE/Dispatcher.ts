@@ -1,4 +1,4 @@
-import { Listener, RelationMapping, Singleton } from '../../Common/';
+import { ActionMapping, Listener, Singleton } from '../../Common/';
 import { SystemPoolStore } from '../Pool/SystemPoolStore';
 
 import { Action } from './Action';
@@ -6,7 +6,7 @@ import { Event } from './Event';
 
 export class Dispatcher extends Singleton {
     public dispatch(ae: Action | Event) {
-        const listenerList = RelationMapping.getInstance().getListenerList(ae.constructor);
+        const listenerList = ActionMapping.getInstance().getListenerList(ae.constructor);
         if (listenerList === undefined || listenerList.length <= 0) {
             console.warn(`Can not find listener by ${ae.constructor.name}`);
             return;
