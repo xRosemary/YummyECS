@@ -18,6 +18,10 @@ export class System {
         console.warn(`[${this.constructor.name}]:`, args);
     }
 
+    protected error(...args: any[]) {
+        console.error(`[${this.constructor.name}]:`, args);
+    }
+
     protected debug(...args: any[]) {
         console.error(`[${this.constructor.name}]:`, args);
     }
