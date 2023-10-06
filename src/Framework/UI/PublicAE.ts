@@ -12,15 +12,3 @@ export class CloseUMG extends Action {
         super();
     }
 }
-
-export class BindUMG extends Action {
-    constructor(
-        public name: string,
-        public widget: string,
-        public action: string,
-        public targetCtor: Function,
-        public propertyKey: string
-    ) {
-        super();
-    }
-}

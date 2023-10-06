@@ -3,11 +3,12 @@ import * as UE from 'ue';
 import { listen } from '../../Decorator/Decorator';
 import { System } from '../ECS';
 import { World } from '../World';
-import { BindUMG, CloseUMG, OpenUMG } from './PublicAE';
+import { CloseUMG, OpenUMG } from './PublicAE';
 import { UIStore } from './UIStore';
 import { SystemPoolStore } from '../Pool/SystemPoolStore';
 import { LoadSheetAction } from '../Asset';
 import { UITable } from './Define';
+import { BindUMG } from '../../Decorator/UIDecorator';
 
 export class UISystem extends System {
     @listen(OpenUMG)
