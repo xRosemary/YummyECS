@@ -31,13 +31,3 @@ export function listen<T extends ctor>(ctor: T) {
         ActionMapping.getInstance().registerListener(target.constructor, propertyKey, ctor);
     };
 }
-
-/**
- * 注册类为表格
- * @param path 表格路径
- */
-export function table(path: string) {
-    return function (ctor: Function) {
-        console.log(path + ctor.name);
-    };
-}
