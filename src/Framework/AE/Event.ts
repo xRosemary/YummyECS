@@ -1,4 +1,6 @@
 import { IEvent } from './Define';
+import { Dispatcher } from './Dispatcher';
+
 export class Event extends IEvent {
     public constructor() {
         super();
@@ -10,6 +12,7 @@ export class Event extends IEvent {
     }
 
     public doImp() {
-        console.log(this.constructor.name);
+        console.log(`Event: ${this.constructor.name} doImp`);
+        return Dispatcher.getInstance().dispatch(this);
     }
 }
