@@ -1,5 +1,8 @@
-export class Event {
-    public constructor() {}
+import { IEvent } from './Define';
+export class Event extends IEvent {
+    public constructor() {
+        super();
+    }
 
     public static dispatch<Ctor extends Event>(this: new (...args: any[]) => Ctor, ...args: any[]) {
         const instance = new this(...args);
