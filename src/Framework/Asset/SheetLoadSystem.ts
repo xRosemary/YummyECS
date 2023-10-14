@@ -1,10 +1,11 @@
 import * as fs from 'fs';
+import * as UE from 'ue';
+import { argv } from 'puerts';
 
 import { listen } from '../../Decorator';
 import { System } from '../ECS';
 import { LoadSheetAction, ReLoadSheetAction } from './PublicAE';
 import { Sheet, SheetStore } from './SheetStore';
-import { World } from '../World';
 
 //#region 常量
 function toNumberArr(str: string): number[] {
@@ -19,6 +20,7 @@ function toBooleanArr(str: string): boolean[] {
 
 const MIN_ROW = 1;
 const MIN_COLUMN = 2;
+const gameInstance = argv.getByName('GameInstance') as UE.GameInstance;
 //#endregion
 
 export class SheetLoadSystem extends System {
@@ -57,7 +59,7 @@ export class SheetLoadSystem extends System {
      * 将文本内容转为预定义类的实例列表
      */
     private parseFile(sheetInfo: Sheet, ctor: Function) {
-        let content = this.readContent(World.getInstance().gameInstance.GetContentDir() + sheetInfo.path);
+        let content = this.readContent(gameInstance.GetContentDir() + sheetInfo.path);
         if (content.length <= MIN_ROW || content[0].length <= MIN_COLUMN) return [];
         content.forEach((v) => v.shift()); // 去掉表示注释的第一列
         this.analyzeDataTypes(sheetInfo, content[0]);

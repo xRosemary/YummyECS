@@ -2,7 +2,6 @@ import * as UE from 'ue';
 import { CreateActorAction, CreateSystemAction, DestroyActorAction, DestroyAllActorAction, DestroySystemAction } from './PublicAE';
 import { System } from '../ECS';
 export declare class PoolSystem extends System {
-    constructor();
     protected onCreateActorAction(action: CreateActorAction): UE.Actor;
     protected onDestroyActorAction(action: DestroyActorAction): void;
     protected onDestroyAllActorAction(_: DestroyAllActorAction): void;
