@@ -1,8 +1,8 @@
 import * as UE from 'ue';
+import { argv } from 'puerts';
 
 import { listen } from '../../Decorator/Decorator';
 import { System } from '../ECS';
-import { World } from '../World';
 import { CloseUMG, OpenUMG } from './PublicAE';
 import { UIStore } from './UIStore';
 import { SystemPoolStore } from '../Pool/SystemPoolStore';
@@ -10,6 +10,7 @@ import { LoadSheetAction } from '../Asset';
 import { UITable } from './Define';
 import { BindUMG } from '../../Decorator/UIDecorator';
 
+const gameInstance = argv.getByName('GameInstance') as UE.GameInstance;
 export class UISystem extends System {
     @listen(OpenUMG)
     protected onOpenUMG(action: OpenUMG) {
@@ -22,7 +23,7 @@ export class UISystem extends System {
         }
 
         const widgetClass = UE.Class.Load(info.path);
-        let widget: any = World.getInstance().getWorld().CreateWidget(widgetClass);
+        let widget: any = gameInstance.GetWorld().CreateWidget(widgetClass);
 
         info.callback.forEach((compInfo, component) => {
             this.bindCallback(compInfo, component, widget, info!.systemCtor);
