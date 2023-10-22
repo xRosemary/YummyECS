@@ -1,5 +1,4 @@
 import * as UE from 'ue';
-import { argv } from 'puerts';
 
 import { listen } from '../../Decorator/Decorator';
 import { System } from '../ECS';
@@ -9,11 +8,13 @@ import { SystemPoolStore } from '../Pool/SystemPoolStore';
 import { LoadSheetAction } from '../Asset';
 import { UITable } from './Define';
 import { BindUMG } from '../../Decorator/UIDecorator';
+import { GAME_INSTANCE, assert } from '../../Common';
 
-const gameInstance = argv.getByName('GameInstance') as UE.GameInstance;
 export class UISystem extends System {
     @listen(OpenUMG)
     protected onOpenUMG(action: OpenUMG) {
+        assert(GAME_INSTANCE !== undefined, 'GAME_INSTANCE is undefined');
+
         let store = UIStore.getInstance();
         const name = action.name;
         let info = store.widgetInfo.get(name);
@@ -23,7 +24,7 @@ export class UISystem extends System {
         }
 
         const widgetClass = UE.Class.Load(info.path);
-        let widget: any = gameInstance.GetWorld().CreateWidget(widgetClass);
+        let widget: any = GAME_INSTANCE.GetWorld().CreateWidget(widgetClass);
 
         info.callback.forEach((compInfo, component) => {
             this.bindCallback(compInfo, component, widget, info!.systemCtor);
