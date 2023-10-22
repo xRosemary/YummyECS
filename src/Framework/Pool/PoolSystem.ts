@@ -1,5 +1,4 @@
 import * as UE from 'ue';
-import { argv } from 'puerts';
 
 import {
     CreateActorAction,
@@ -12,18 +11,18 @@ import { EntityPoolStore } from './EntityPoolStore';
 import { SystemPoolStore } from './SystemPoolStore';
 import { System } from '../ECS';
 import { listen } from '../../Decorator';
-import { assert } from '../../Common';
-
-const gameInstance = argv.getByName('GameInstance') as UE.GameInstance;
+import { GAME_INSTANCE, assert } from '../../Common';
 
 export class PoolSystem extends System {
     @listen(CreateActorAction)
     protected onCreateActorAction(action: CreateActorAction): UE.Actor {
+        assert(GAME_INSTANCE !== undefined, 'GAME_INSTANCE is undefined');
+
         let store = EntityPoolStore.getInstance();
         let reusableList = store.reusableEntities.get(action.ctor);
         if (reusableList === undefined || reusableList.length === 0) {
             // 没有可复用的actor则新创建一个
-            let world = gameInstance.GetWorld();
+            let world = GAME_INSTANCE.GetWorld();
             let actor = world.SpawnActor(
                 (action.ctor as any).StaticClass(),
                 action.transform,
