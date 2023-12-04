@@ -8,7 +8,37 @@
 - 统一 TS 和 UE 原生组件的管理
 - 考虑加一层 Group 用于缓存，加快查找速度
 
-## 使用示例
+## 如何加载框架
+创建一个新地图，用于框架初始化。编写下面这个Actor并放于改场景中。
+```typescript
+import * as UE from 'ue';
+import { C, F } from 'yummyecs';
+
+const DEFAULT_INIT_SYSTEM = [F.GmSystem, F.SheetLoadSystem, F.UISystem]; // 配置想要加载的System
+const DEFAULT_MAP = 'ThirdPersonMap'; // 游戏地图，框架加载完成后自动跳转到该地图
+
+class FrameWorkLoader extends UE.Actor {
+    ReceiveBeginPlay(): void {
+        // 将Game instance传给框架
+        C.InitGameInstance(this.GetGameInstance());
+
+        // 初始化系统池
+        F.SystemPoolStore.getInstance().systems.push(new F.PoolSystem());
+
+        // 加载默认System
+        DEFAULT_INIT_SYSTEM.forEach((systemCtor) => {
+            F.CreateSystemAction.do(systemCtor);
+        });
+
+        // 加载默认地图
+        UE.GameplayStatics.OpenLevel(this.GetWorld(), DEFAULT_MAP);
+    }
+}
+
+export default FrameWorkLoader;
+```
+
+## 功能示例
 ``` typescript
 import * as UE from 'ue'
 import { argv } from 'puerts';
@@ -101,48 +131,6 @@ npm install yummyecs-1.0.0.tgz
 
 ### 编写相关c++扩展
 ``` c++
-// TSGameInstance.h
-#pragma once
-
-#include "CoreMinimal.h"
-#include "JsEnv.h"
-#include "Engine/GameInstance.h"
-#include "TSGameInstance.generated.h"
-
-UCLASS()
-class TPS_API UTSGameInstance : public UGameInstance
-{
-	GENERATED_BODY()
-	virtual void OnStart() override;
-	virtual void Shutdown() override;
-private:
-	TSharedPtr<puerts::FJsEnv> GameScript;
-};
-
-// TSGameInstance.cpp
-#include "TSGameInstance.h"
-
-void UTSGameInstance::OnStart()
-{
-    GameScript = MakeShared<puerts::FJsEnv>(
-        std::make_unique<puerts::DefaultJSModuleLoader>(
-            TEXT("JavaScript")
-        ),
-        std::make_shared<puerts::FDefaultLogger>(),
-        8080 // 指定调试websocket server所用的端口，即视为要打开调试server
-    );
-    TArray<TPair<FString, UObject*>> Arguments;
-    Arguments.Add(TPair<FString, UObject*>(TEXT("GameInstance"), this));
-    GameScript->Start("GameStart", Arguments);
-}
-
-void UTSGameInstance::Shutdown()
-{
-    GameScript.Reset();
-}
-```
-
-``` c++
 // TSExtensionMethods.h
 #pragma once
 
@@ -155,6 +143,7 @@ void UTSGameInstance::Shutdown()
 #include "Misc/Paths.h"
 #include "Engine/GameInstance.h"
 #include "Blueprint/UserWidget.h"
+#include "EnhancedInputComponent.h"
 #include "TSExtensionMethods.generated.h"
 
 UCLASS()
@@ -174,13 +163,32 @@ class TPS_API UTSExtensionMethods : public UExtensionMethods
 	static bool Destroy(AActor* Actor, bool bNetForce = false, bool bShouldModifyLevel = true);
 
 	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static UGameInstance* GetGameInstance(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static void AddToRoot(UObject* Object);
+
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
 	static UEnhancedInputLocalPlayerSubsystem* GetEnhancedInputSubsystem(APlayerController* PlayerController);
 
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static void AddMappingContext(UEnhancedInputLocalPlayerSubsystem* SubSystem, const UInputMappingContext* MappingContext, int32 Priority, const FModifyContextOptions& Options = FModifyContextOptions());
+
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static void BindAction(UEnhancedInputComponent* Component, const UInputAction* Action, ETriggerEvent TriggerEvent, UObject* Object, FName FunctionName);
+
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static void SetPath(FSoftObjectPath SoftObjectPath, const FString& Path);
+	
+	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
+	static UObject* ResolveObject(FSoftObjectPath SoftObjectPath);
+	
 	UFUNCTION(BlueprintCallable, Category = "WorldExtension")
 	static FString GetContentDir(UGameInstance* gameInstance);
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "WorldExtension")
 	static UUserWidget* CreateWidget(UWorld* World, UClass* Class);
+	friend class UEnhancedInputComponent;
 };
 
 // TSExtensionMethods.cpp
@@ -219,9 +227,49 @@ bool UTSExtensionMethods::Destroy(AActor* Actor, bool bNetForce, bool bShouldMod
     return Actor->Destroy(bNetForce, bShouldModifyLevel);
 }
 
+UGameInstance* UTSExtensionMethods::GetGameInstance(AActor* Actor)
+{
+    return Actor->GetGameInstance();
+}
+
+void UTSExtensionMethods::AddToRoot(UObject* Object)
+{
+    Object->AddToRoot();
+}
+
 UEnhancedInputLocalPlayerSubsystem* UTSExtensionMethods::GetEnhancedInputSubsystem(APlayerController* PlayerController)
 {
     return ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+}
+
+void UTSExtensionMethods::AddMappingContext(UEnhancedInputLocalPlayerSubsystem* SubSystem, const UInputMappingContext* MappingContext, int32 Priority, const FModifyContextOptions& Options)
+{
+    SubSystem->AddMappingContext(MappingContext, Priority, Options);
+}
+
+void UTSExtensionMethods::BindAction(UEnhancedInputComponent* Component, const UInputAction* Action, ETriggerEvent TriggerEvent, UObject* Object, FName FunctionName)
+{
+    class MyUEnhancedInputComponent : public UEnhancedInputComponent
+    {
+        friend UTSExtensionMethods;
+        TArray<TUniquePtr<FEnhancedInputActionEventBinding>> EnhancedActionEventBindings;
+    };
+
+    TUniquePtr<FEnhancedInputActionEventDelegateBinding<FEnhancedInputActionHandlerSignature>> AB = MakeUnique<FEnhancedInputActionEventDelegateBinding<FEnhancedInputActionHandlerSignature>>(Action, TriggerEvent);
+    // Component->BindAction(Action, TriggerEvent, Object, FunctionName);
+    AB->Delegate.SetShouldFireWithEditorScriptGuard(false);
+    auto comp = (MyUEnhancedInputComponent*)Component;
+    comp->EnhancedActionEventBindings.Add_GetRef(MoveTemp(AB));
+}
+
+void UTSExtensionMethods::SetPath(FSoftObjectPath SoftObjectPath, const FString& Path)
+{
+    SoftObjectPath.SetPath(Path);
+}
+
+UObject* UTSExtensionMethods::ResolveObject(FSoftObjectPath SoftObjectPath)
+{
+    return SoftObjectPath.ResolveObject();
 }
 
 FString UTSExtensionMethods::GetContentDir(UGameInstance* gameInstance)
