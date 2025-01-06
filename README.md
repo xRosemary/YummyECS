@@ -92,6 +92,48 @@ F.OpenUMG.do(UMG_NAME);
 
 class TestSingleton extends C.Singleton {}
 console.error(TestSingleton.getInstance() === TestSingleton.getInstance());
+
+//////////////////////////// 多播委托Handler ///////////////////////////////////
+// LandedDelegate: $MulticastDelegate<(Hit: UE.HitResult) => void>;
+class GA_Jump extends UE.GameplayAbility {
+    private CallbackHandler: F.DelegateHandler | undefined;
+
+    K2_ActivateAbility(): void {
+        if (!this.K2_CommitAbility()) {
+            this.K2_CancelAbility();
+            return;
+        }
+
+        const OwnerCharacter = this.GetOwningActorFromActorInfo() as UE.Character;
+        if (OwnerCharacter === null) {
+            this.K2_CancelAbility();
+            return;
+        }
+
+        // 绑定方式 1
+        this.CallbackHandler = F.DelegateHandler.bind(OwnerCharacter.LandedDelegate, () => {
+            this.K2_EndAbility();
+        });
+
+        // 绑定方式 2
+        // this.CallbackHandler = F.DelegateHandler.bind(OwnerCharacter.LandedDelegate, this.OnLanded, this);
+
+        OwnerCharacter.Jump();
+    }
+
+    K2_OnEndAbility(_bWasCancelled: boolean): void {
+        const OwnerCharacter = this.GetOwningActorFromActorInfo() as UE.Character;
+        if (OwnerCharacter !== null) {
+            // 委托解绑
+            this.CallbackHandler?.unbind(OwnerCharacter.LandedDelegate);
+            OwnerCharacter.StopJumping();
+        }
+    }
+
+    // private OnLanded(_Hit: UE.HitResult): void {
+    //     this.K2_EndAbility();
+    // }
+}
 ```
 
 ## 安装
